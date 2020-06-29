@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  nginx-proxy:
+    build: ./proxy
+    init: true  # Workaround for generate-dhparam becoming a zombie process (https://github.com/nginx-proxy/nginx-proxy/issues/1161)
+    restart: always
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    volumes:
+      - certs:/etc/nginx/certs:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  letsencrypt-companion:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    restart: always
+    container_name: nginx-proxy-le
+    volumes:
+      - certs:/etc/nginx/certs
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - DEFAULT_EMAIL
+    depends_on:
+      - nginx-proxy
+
+networks:
+  default:
+    external:
+      name: nginx-proxy
+
+volumes:
+  certs:
+  vhost.d:
+  html:
