@@ -1,20 +1,15 @@
-version: '3.8'
-
 services:
   nginx-proxy:
-    build: ./proxy
-    init: true  # Workaround for generate-dhparam becoming a zombie process (https://github.com/nginx-proxy/nginx-proxy/issues/1161)
+    image: nginxproxy/nginx-proxy
     restart: always
     container_name: nginx-proxy
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - conf:/etc/nginx/conf.d
       - certs:/etc/nginx/certs:ro
       - vhost:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
-      - dhparam:/etc/nginx/dhparam
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
   letsencrypt-companion:
@@ -22,7 +17,6 @@ services:
     restart: always
     container_name: nginx-proxy-acme
     volumes:
-      - conf:/etc/nginx/conf.d
       - certs:/etc/nginx/certs
       - vhost:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
@@ -40,9 +34,7 @@ networks:
     external: true
 
 volumes:
-  conf:
   certs:
   vhost:
   html:
-  dhparam:
   acme:
